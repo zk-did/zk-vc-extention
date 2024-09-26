@@ -1,0 +1,6 @@
+SnarkJS Extension Example
+This project demonstrates how to run SnarkJS within a browser extension. Since SnarkJS cannot be directly executed due to security reasons, we applied a sandbox policy to safely handle zk-SNARK operations within a separate iframe.
+
+Key Policies
+Sandbox: A separate iframe environment is used to run SnarkJS operations, isolating it from the rest of the browser. This ensures that zk-SNARK proof generation and verification are securely executed without external code interference.
+Content Security Policy (CSP): All scripts running within the extension are restricted to 'self' and 'unsafe-eval' policies, ensuring that SnarkJS operates only within the sandboxed iframe environment, enhancing overall security.
