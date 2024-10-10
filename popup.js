@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const proofComponent = document.getElementById('proof');
     const resultComponent = document.getElementById('result');
+    const publicSignalsComponent = document.getElementById('publicSignals');
+    const calldataComponent = document.getElementById('calldata');
     const bGenProof = document.getElementById("bGenProof");
 
     bGenProof.addEventListener("click", calculateProof);
@@ -50,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     resultComponent.textContent = `Error: ${event.data.error}`;
                 } else {
                     proofComponent.textContent = JSON.stringify(event.data.proof, null, 2);
+                    publicSignalsComponent.textContent = JSON.stringify(event.data.publicSignals, null, 2);
+                    calldataComponent.textContent = JSON.stringify(event.data.calldata, null, 2);
                     resultComponent.textContent = event.data.verificationResult ? "Proof is valid" : "Proof is invalid";
                 }
                 window.removeEventListener('message', handler);

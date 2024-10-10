@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SBT 발급 페이지</title>
+    <!-- MetaMask를 감지하는 라이브러리 -->
+    <script src="https://unpkg.com/@metamask/detect-provider@1.2.0/dist/detect-provider.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+</head>
+<body>
+    <h1>SBT 발급 페이지</h1>
+
+    <!-- MetaMask 연결 버튼 -->
+    <button type="button" id="connectMetaMaskButton">MetaMask 연결</button>
+    <div id="walletStatus">MetaMask 연결되지 않음</div><br>
+
+    <form id="sbtForm">
+        <label for="calldata">Calldata:</label><br>
+        <textarea id="calldata" name="calldata" rows="5" cols="50"></textarea><br><br>
+
+        <label for="contractAddress">Contract Address:</label><br>
+        <input type="text" id="contractAddress" name="contractAddress" size="50"><br><br>
+
+        <label for="contractABI">Contract ABI (JSON format):</label><br>
+        <textarea id="contractABI" name="contractABI" rows="10" cols="50"></textarea><br><br>
+
+        <button type="button" id="issueSBTButton" disabled>View Function 호출</button>
+    </form>
+
+    <script>
+        let provider;
+        let signer;
+
+        // MetaMask 연결 버튼 클릭 시 동작할 함수
+        document.getElementById('connectMetaMaskButton').addEventListener('click', async function () {
+            try {
+                provider = await detectEthereumProvider();
+
+                if (provider) {
+                    console.log('MetaMask가 감지되었습니다.');
+                    // MetaMask 연결 요청
+                    await provider.request({ method: 'eth_requestAccounts' });
+
+                    // 연결된 계정 가져오기
+                    const ethersProvider = new ethers.providers.Web3Provider(provider);
+                    signer = ethersProvider.getSigner();
+
+                    const address = await signer.getAddress();
+                    document.getElementById('walletStatus').textContent = `MetaMask 연결됨: ${address}`;
+                    
+                    // View Function 호출 버튼 활성화
+                    document.getElementById('issueSBTButton').disabled = false;
+                } else {
+                    console.log('MetaMask가 설치되어 있지 않습니다.');
+                    alert('MetaMask가 설치되어 있지 않습니다. 설치 후 다시 시도해 주세요.');
+                }
+            } catch (error) {
+                console.error('MetaMask 연결 실패:', error);
+                document.getElementById('walletStatus').textContent = 'MetaMask 연결 실패';
+            }
+        });
+
+        // View Function 호출 버튼 클릭 시 동작할 함수
+        document.getElementById('issueSBTButton').addEventListener('click', async function () {
+            const calldata = document.getElementById('calldata').value;
+            const contractAddress = document.getElementById('contractAddress').value;
+            const contractABI = document.getElementById('contractABI').value;
+
+            if (!calldata || !contractAddress || !contractABI) {
+                alert('모든 필드를 입력하세요.');
+                return;
+            }
+
+            try {
+                // JSON 파싱 오류 처리
+                const parsedABI = JSON.parse(contractABI);
+
+                // 스마트 컨트랙트 인스턴스 생성
+                const contract = new ethers.Contract(contractAddress, parsedABI, signer);
+
+                // Calldata를 배열로 변환 (예: "1,2,3" => [1,2,3])
+                const calldataArray = calldata.split(',').map(Number);
+
+                // View 함수 호출 (예시로 verifyProof 함수 호출)
+                const pA = calldataArray.slice(0, 2);
+                const pB = [
+                    [calldataArray[2], calldataArray[3]],
+                    [calldataArray[4], calldataArray[5]]
+                ];
+                const pC = calldataArray.slice(6, 8);
+                const pubSignals = calldataArray.slice(8);
+
+                // 스마트 컨트랙트의 view 함수 호출
+                const result = await contract.verifyProof(pA, pB, pC, pubSignals);
+
+                // 결과 출력
+                alert('View 함수 결과: ' + result);
+            } catch (error) {
+                console.error('오류 발생:', error);
+                alert('입력값을 확인하세요. ABI가 올바른지 확인하세요.');
+            }
+        });
+    </script>
+</body>
+</html>
